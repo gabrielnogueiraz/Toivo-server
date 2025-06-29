@@ -12,16 +12,9 @@ const joinWaitlistJsonSchema = {
       type: 'string',
       format: 'email',
       description: 'User email address' 
-    },
-    name: { 
-      type: 'string',
-      description: 'User name (optional)' 
-    },
-    referralCode: { 
-      type: 'string',
-      description: 'Referral code (optional)' 
     }
-  }
+  },
+  additionalProperties: false // Não permite propriedades adicionais
 } as const;
 
 const waitlistResponseJsonSchema = {
