@@ -12,15 +12,15 @@ export class WaitlistService {
     ipAddress?: string
   ) {
     try {
-      // Add to waitlist
+      // Add to waitlist - apenas o email é necessário
       const waitlistEntry = await WaitlistRepository.addToWaitlist({
-        ...data,
+        email: data.email,
         ipAddress,
       });
 
-      // Send confirmation email (don't await to avoid blocking the response)
+      // Send confirmation email (não usar await para não bloquear a resposta)
       this.sendConfirmationEmail(data.email).catch((error) => {
-        console.error('Failed to send confirmation email:', error);
+        console.error('Falha ao enviar e-mail de confirmação:', error);
       });
 
       return {
