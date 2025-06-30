@@ -6,35 +6,6 @@ import {
 import { WaitlistController } from "./waitlist.controller.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
 
-const joinWaitlistJsonSchema = {
-  type: "object",
-  required: ["email"],
-  properties: {
-    email: {
-      type: "string",
-      format: "email",
-      description: "User email address",
-    },
-  },
-  additionalProperties: false,
-} as const;
-
-const waitlistResponseJsonSchema = {
-  type: "object",
-  required: ["success", "message"],
-  properties: {
-    success: { type: "boolean" },
-    message: { type: "string" },
-    data: {
-      type: "object",
-      properties: {
-        email: { type: "string", format: "email" },
-        createdAt: { type: "string", format: "date-time" },
-      },
-    },
-  },
-} as const;
-
 const RATE_LIMIT = {
   max: 5,
   timeWindow: "1 minute",
@@ -52,50 +23,12 @@ export async function waitlistRoutes(fastify: FastifyInstance) {
         description: "Join the waitlist with an email address",
         tags: ["Waitlist"],
         summary: "Join waitlist",
-        body: joinWaitlistJsonSchema,
+        body: joinWaitlistSchema,
         response: {
-          201: waitlistResponseJsonSchema,
-          400: {
-            type: "object",
-            properties: {
-              success: { type: "boolean", default: false },
-              error: {
-                type: "object",
-                properties: {
-                  message: { type: "string" },
-                  code: { type: "string" },
-                },
-              },
-            },
-          },
-          409: {
-            description: "Email already exists",
-            type: "object",
-            properties: {
-              success: { type: "boolean" },
-              error: {
-                type: "object",
-                properties: {
-                  message: { type: "string" },
-                  code: { type: "string" },
-                },
-              },
-            },
-          },
-          500: {
-            description: "Internal server error",
-            type: "object",
-            properties: {
-              success: { type: "boolean" },
-              error: {
-                type: "object",
-                properties: {
-                  message: { type: "string" },
-                  code: { type: "string" },
-                },
-              },
-            },
-          },
+          201: waitlistResponseSchema,
+          400: waitlistResponseSchema,
+          409: waitlistResponseSchema,
+          500: waitlistResponseSchema,
         },
       },
       config: {
