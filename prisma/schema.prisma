@@ -20,5 +20,28 @@ model WaitlistEmail {
   @@map("waitlist_emails") // Explicit table name in snake_case
 }
 
-// Future models will be added here
-// model User { ... }
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  passwordHash  String
+  theme         String    @default("default")
+  profileImage  String?
+  sequence      Int       @default(0)
+  lastCheckIn   DateTime? 
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  notifications Notification[]
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+}

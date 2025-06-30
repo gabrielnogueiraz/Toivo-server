@@ -1,58 +1,46 @@
-import { PrismaClient } from "@prisma/client";
-import { serverConfig } from "./app.config.js";
+import { PrismaClient } from '@prisma/client';
 
 declare global {
+  // allow global `var` declarations
+  // eslint-disable-next-line no-var
   var prisma: PrismaClient | undefined;
 }
 
 const prisma =
   global.prisma ||
   new PrismaClient({
-    log: serverConfig.isDevelopment ? ["query", "error", "warn"] : ["error"],
+    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   });
 
-if (process.env.NODE_ENV !== "production") {
+if (process.env.NODE_ENV !== 'production') {
   global.prisma = prisma;
 }
-
-export { prisma };
 
 export const connectDB = async () => {
   try {
     await prisma.$connect();
-    console.log("🚀 Database connected successfully");
+    console.log('🚀 Database connected successfully');
   } catch (error) {
-    console.error("❌ Database connection error:", error);
+    console.error('❌ Database connection error:', error);
     process.exit(1);
   }
 };
 
 export const disconnectDB = async () => {
-  try {
-    await prisma.$disconnect();
-    console.log("🛑 Database disconnected");
-  } catch (error) {
-    console.error("❌ Error disconnecting from database:", error);
-    process.exit(1);
-  }
+  await prisma.$disconnect();
 };
 
-export const gracefulShutdown = async (signal: string) => {
-  console.log(`\n🛑 Received ${signal}. Shutting down gracefully...`);
+function gracefulShutdown(signal: string) {
+  console.log(`Received ${signal}, shutting down gracefully...`);
+  disconnectDB().finally(() => {
+    console.log('Database disconnected.');
+    process.exit(0);
+  });
+}
 
-  await disconnectDB();
+// Graceful shutdown
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
-  process.exit(0);
-};
+export { prisma };
 
-process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
-process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-
-process.on("unhandledRejection", (reason, promise) => {
-  console.error("Unhandled Rejection at:", promise, "reason:", reason);
-});
-
-process.on("uncaughtException", (error) => {
-  console.error("Uncaught Exception:", error);
-  process.exit(1);
-});
