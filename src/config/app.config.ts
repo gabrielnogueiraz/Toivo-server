@@ -25,7 +25,7 @@ export const appConfig: FastifyServerOptions = {
 };
 
 export const corsConfig = {
-  origin: process.env.FRONTEND_URL || "*",
+  origin: process.env.FRONTEND_URL || "http://localhost:5000",
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",
