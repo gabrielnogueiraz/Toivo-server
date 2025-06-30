@@ -1,6 +1,5 @@
-import nodemailer from 'nodemailer';
+import nodemailer from "nodemailer";
 
-// Types
 interface EmailTemplates {
   launchAnnouncement: (name?: string) => string;
   waitlistConfirmation: (email: string) => string;
@@ -14,47 +13,43 @@ interface SendEmailOptions {
   from?: string;
 }
 
-// Create a test account if in development
 const createTransporter = () => {
-  // In development, use ethereal.email for testing
-  if (process.env.NODE_ENV === 'development' && !process.env.SMTP_HOST) {
+  if (process.env.NODE_ENV === "development" && !process.env.SMTP_HOST) {
     return nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
+      host: "smtp.ethereal.email",
       port: 587,
       secure: false,
       auth: {
-        user: 'maddison53@ethereal.email',
-        pass: 'jn7jnAPss4f63QBpEu'
-      }
+        user: "maddison53@ethereal.email",
+        pass: "jn7jnAPss4f63QBpEu",
+      },
     });
   }
 
-  // In production or if SMTP config is provided
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.example.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
+    host: process.env.SMTP_HOST || "smtp.example.com",
+    port: parseInt(process.env.SMTP_PORT || "587"),
+    secure: process.env.SMTP_SECURE === "true",
     auth: {
-      user: process.env.SMTP_AUTH_USER || '',
-      pass: process.env.SMTP_AUTH_PASS || '',
+      user: process.env.SMTP_AUTH_USER || "",
+      pass: process.env.SMTP_AUTH_PASS || "",
     },
   });
 };
 
 const transporter = createTransporter();
 
-// Verify connection configuration
 transporter.verify((error) => {
   if (error) {
-    console.error('❌ SMTP connection error:', error);
+    console.error("❌ SMTP connection error:", error);
   } else {
-    console.log('✅ SMTP server is ready to take our messages');
+    console.log("✅ SMTP server is ready to take our messages");
   }
 });
 
 // Email templates
 const emailTemplates: EmailTemplates = {
-  launchAnnouncement: (name = 'there') => `
+  launchAnnouncement: (name = "there") => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #4f46e5; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
         <h1 style="color: white; margin: 0;">🎉 Toivo is Live! 🎉</h1>
@@ -65,7 +60,7 @@ const emailTemplates: EmailTemplates = {
         <p>As a valued member of our waitlist, we wanted to give you early access to start transforming your productivity.</p>
         
         <div style="text-align: center; margin: 30px 0;">
-          <a href="${process.env.FRONTEND_URL || 'https://toivoapp.com'}" 
+          <a href="${process.env.FRONTEND_URL || "https://toivoapp.com"}" 
              style="display: inline-block; background-color: #4f46e5; color: white; 
                     padding: 12px 24px; text-decoration: none; border-radius: 6px; 
                     font-weight: bold;">
@@ -78,7 +73,7 @@ const emailTemplates: EmailTemplates = {
       </div>
     </div>
   `,
-  
+
   waitlistConfirmation: (email: string) => `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background-color: #4f46e5; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;">
@@ -101,13 +96,12 @@ const emailTemplates: EmailTemplates = {
   `,
 };
 
-/**
- * Send an email
- */
 export async function sendEmail(options: SendEmailOptions) {
   try {
     const mailOptions = {
-      from: options.from || `"Toivo Team" <${process.env.SMTP_FROM_EMAIL || 'noreply@toivoapp.com'}>`,
+      from:
+        options.from ||
+        `"Toivo Team" <${process.env.SMTP_FROM_EMAIL || "noreply@toivoapp.com"}>`,
       to: options.to,
       subject: options.subject,
       text: options.text,
@@ -115,51 +109,47 @@ export async function sendEmail(options: SendEmailOptions) {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log('📧 Email sent:', info.messageId);
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Preview URL: %s', nodemailer.getTestMessageUrl(info));
+    console.log("📧 Email sent:", info.messageId);
+
+    if (process.env.NODE_ENV === "development") {
+      console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
     }
-    
+
     return info;
   } catch (error) {
-    console.error('❌ Error sending email:', error);
-    throw new Error('Failed to send email');
+    console.error("❌ Error sending email:", error);
+    throw new Error("Failed to send email");
   }
 }
 
-/**
- * Send launch announcement email
- */
 export async function sendLaunchEmail(to: string, name?: string) {
-  const subject = '🚀 Toivo is Live! Start Your Productivity Journey';
-  const text = `Hi ${name || 'there'},\n\nWe're excited to let you know that Toivo is now live and ready for you to use!\n\n` +
-    `Visit ${process.env.FRONTEND_URL || 'https://toivoapp.com'} to get started.\n\n` +
-    'Thanks for your patience and support!\n\n' +
-    'Best regards,\nThe Toivo Team';
-    
+  const subject = "🚀 Toivo is Live! Start Your Productivity Journey";
+  const text =
+    `Hi ${name || "there"},\n\nWe're excited to let you know that Toivo is now live and ready for you to use!\n\n` +
+    `Visit ${process.env.FRONTEND_URL || "https://toivoapp.com"} to get started.\n\n` +
+    "Thanks for your patience and support!\n\n" +
+    "Best regards,\nThe Toivo Team";
+
   return sendEmail({
     to,
     subject,
     text,
-    html: emailTemplates.launchAnnouncement(name)
+    html: emailTemplates.launchAnnouncement(name),
   });
 }
 
-/**
- * Send waitlist confirmation email
- */
 export async function sendWaitlistConfirmationEmail(email: string) {
-  const subject = '🎉 Welcome to the Toivo Waitlist!';
-  const text = `Thank you for joining the Toivo waitlist with ${email}.\n\n` +
+  const subject = "🎉 Welcome to the Toivo Waitlist!";
+  const text =
+    `Thank you for joining the Toivo waitlist with ${email}.\n\n` +
     "We'll notify you as soon as we launch. Get ready to boost your productivity!\n\n" +
-    'In the meantime, follow us on social media for updates and productivity tips.\n\n' +
-    'Best regards,\nThe Toivo Team';
-    
+    "In the meantime, follow us on social media for updates and productivity tips.\n\n" +
+    "Best regards,\nThe Toivo Team";
+
   return sendEmail({
     to: email,
     subject,
     text,
-    html: emailTemplates.waitlistConfirmation(email)
+    html: emailTemplates.waitlistConfirmation(email),
   });
 }

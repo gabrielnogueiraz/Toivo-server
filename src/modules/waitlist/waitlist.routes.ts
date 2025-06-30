@@ -1,104 +1,103 @@
-import { FastifyInstance } from 'fastify';
-import { joinWaitlistSchema, waitlistResponseSchema } from './waitlist.schema.js';
-import { WaitlistController } from './waitlist.controller.js';
-import { zodToJsonSchema } from 'zod-to-json-schema';
+import { FastifyInstance } from "fastify";
+import {
+  joinWaitlistSchema,
+  waitlistResponseSchema,
+} from "./waitlist.schema.js";
+import { WaitlistController } from "./waitlist.controller.js";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
-// Convert Zod schemas to JSON Schema
 const joinWaitlistJsonSchema = {
-  type: 'object',
-  required: ['email'],
+  type: "object",
+  required: ["email"],
   properties: {
-    email: { 
-      type: 'string',
-      format: 'email',
-      description: 'User email address' 
-    }
+    email: {
+      type: "string",
+      format: "email",
+      description: "User email address",
+    },
   },
-  additionalProperties: false // Não permite propriedades adicionais
+  additionalProperties: false,
 } as const;
 
 const waitlistResponseJsonSchema = {
-  type: 'object',
-  required: ['success', 'message'],
+  type: "object",
+  required: ["success", "message"],
   properties: {
-    success: { type: 'boolean' },
-    message: { type: 'string' },
+    success: { type: "boolean" },
+    message: { type: "string" },
     data: {
-      type: 'object',
+      type: "object",
       properties: {
-        email: { type: 'string', format: 'email' },
-        createdAt: { type: 'string', format: 'date-time' }
-      }
-    }
-  }
+        email: { type: "string", format: "email" },
+        createdAt: { type: "string", format: "date-time" },
+      },
+    },
+  },
 } as const;
 
-// Rate limiting configuration
 const RATE_LIMIT = {
-  max: 5, // Maximum number of requests
-  timeWindow: '1 minute', // Time window
-  cache: 10000, // Cache size
-  whitelist: ['127.0.0.1'], // Whitelisted IPs (e.g., for health checks)
-  redis: undefined, // Could be used with Redis in production
-  keyGenerator: (req: any) => `${req.ip}-${req.headers['user-agent']}`,
+  max: 5,
+  timeWindow: "1 minute",
+  cache: 10000,
+  whitelist: ["127.0.0.1"],
+  redis: undefined,
+  keyGenerator: (req: any) => `${req.ip}-${req.headers["user-agent"]}`,
 };
 
 export async function waitlistRoutes(fastify: FastifyInstance) {
-  // Join waitlist
   fastify.post(
-    '/',
+    "/",
     {
       schema: {
-        description: 'Join the waitlist with an email address',
-        tags: ['Waitlist'],
-        summary: 'Join waitlist',
+        description: "Join the waitlist with an email address",
+        tags: ["Waitlist"],
+        summary: "Join waitlist",
         body: joinWaitlistJsonSchema,
         response: {
           201: waitlistResponseJsonSchema,
           400: {
-            type: 'object',
+            type: "object",
             properties: {
-              success: { type: 'boolean', default: false },
+              success: { type: "boolean", default: false },
               error: {
-                type: 'object',
+                type: "object",
                 properties: {
-                  message: { type: 'string' },
-                  code: { type: 'string' },
+                  message: { type: "string" },
+                  code: { type: "string" },
                 },
               },
             },
           },
           409: {
-            description: 'Email already exists',
-            type: 'object',
+            description: "Email already exists",
+            type: "object",
             properties: {
-              success: { type: 'boolean' },
+              success: { type: "boolean" },
               error: {
-                type: 'object',
+                type: "object",
                 properties: {
-                  message: { type: 'string' },
-                  code: { type: 'string' },
+                  message: { type: "string" },
+                  code: { type: "string" },
                 },
               },
             },
           },
           500: {
-            description: 'Internal server error',
-            type: 'object',
+            description: "Internal server error",
+            type: "object",
             properties: {
-              success: { type: 'boolean' },
+              success: { type: "boolean" },
               error: {
-                type: 'object',
+                type: "object",
                 properties: {
-                  message: { type: 'string' },
-                  code: { type: 'string' },
+                  message: { type: "string" },
+                  code: { type: "string" },
                 },
               },
             },
           },
         },
       },
-      // Rate limiting for this endpoint
       config: {
         rateLimit: RATE_LIMIT,
       },
@@ -106,68 +105,64 @@ export async function waitlistRoutes(fastify: FastifyInstance) {
     WaitlistController.joinWaitlist
   );
 
-  // Get waitlist stats (admin only)
   fastify.get(
-    '/waitlist/stats',
+    "/waitlist/stats",
     {
       schema: {
-        description: 'Get waitlist statistics (admin only)',
-        tags: ['Waitlist', 'Admin'],
-        summary: 'Get waitlist stats',
+        description: "Get waitlist statistics (admin only)",
+        tags: ["Waitlist", "Admin"],
+        summary: "Get waitlist stats",
         security: [{ apiKey: [] }],
         response: {
           200: {
-            description: 'Waitlist statistics',
-            type: 'object',
+            description: "Waitlist statistics",
+            type: "object",
             properties: {
-              success: { type: 'boolean' },
+              success: { type: "boolean" },
               data: {
-                type: 'object',
+                type: "object",
                 properties: {
-                  count: { type: 'number' },
-                  lastUpdated: { type: 'string', format: 'date-time' },
+                  count: { type: "number" },
+                  lastUpdated: { type: "string", format: "date-time" },
                 },
               },
             },
           },
           401: {
-            description: 'Unauthorized',
-            type: 'object',
+            description: "Unauthorized",
+            type: "object",
             properties: {
-              success: { type: 'boolean' },
+              success: { type: "boolean" },
               error: {
-                type: 'object',
+                type: "object",
                 properties: {
-                  message: { type: 'string' },
-                  code: { type: 'string' },
+                  message: { type: "string" },
+                  code: { type: "string" },
                 },
               },
             },
           },
           500: {
-            description: 'Internal server error',
-            type: 'object',
+            description: "Internal server error",
+            type: "object",
             properties: {
-              success: { type: 'boolean' },
+              success: { type: "boolean" },
               error: {
-                type: 'object',
+                type: "object",
                 properties: {
-                  message: { type: 'string' },
-                  code: { type: 'string' },
+                  message: { type: "string" },
+                  code: { type: "string" },
                 },
               },
             },
           },
         },
       },
-      // Add admin authentication here if needed
-      // preValidation: [fastify.authenticate],
     },
     WaitlistController.getWaitlistStats
   );
 }
 
-// Add schema for OpenAPI documentation
 export const waitlistSchemas = {
   joinWaitlist: joinWaitlistSchema,
 };
