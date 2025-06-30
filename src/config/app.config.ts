@@ -24,8 +24,13 @@ export const appConfig: FastifyServerOptions = {
   forceCloseConnections: "idle",
 };
 
+const allowedOrigins = (process.env.FRONTEND_URL || "http://localhost:5000")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
+
 export const corsConfig = {
-  origin: process.env.FRONTEND_URL || "http://localhost:5000",
+  origin: allowedOrigins.length === 1 ? allowedOrigins[0] : allowedOrigins,
   methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",
