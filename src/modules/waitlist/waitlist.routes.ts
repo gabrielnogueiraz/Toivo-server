@@ -42,10 +42,9 @@ export async function waitlistRoutes(fastify: FastifyInstance) {
     "/waitlist/stats",
     {
       schema: {
-        description: "Get waitlist statistics (admin only)",
-        tags: ["Waitlist", "Admin"],
+        description: "Get waitlist statistics",
+        tags: ["Waitlist"],
         summary: "Get waitlist stats",
-        security: [{ apiKey: [] }],
         response: {
           200: {
             description: "Waitlist statistics",
