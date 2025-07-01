@@ -21,4 +21,21 @@ export const waitlistResponseSchema = z.object({
     .optional(),
 });
 
+export const waitlistEmailSchema = z.object({
+  id: z.union([z.string(), z.number()]),
+  email: z.string().email(),
+  created_at: z.union([z.string().datetime(), z.date()]),
+  ip_address: z.string().nullable(),
+});
+
+export const waitlistStatsResponseSchema = z.object({
+  success: z.boolean(),
+  data: z.object({
+    count: z.number(),
+    lastUpdated: z.string().datetime(),
+    emails: z.array(waitlistEmailSchema),
+  }),
+});
+
 export type WaitlistResponse = z.infer<typeof waitlistResponseSchema>;
+export type WaitlistStatsResponse = z.infer<typeof waitlistStatsResponseSchema>;

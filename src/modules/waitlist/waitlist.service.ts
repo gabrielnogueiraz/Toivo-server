@@ -51,12 +51,20 @@ export class WaitlistService {
 
   static async getWaitlistStats() {
     try {
-      const count = await WaitlistRepository.getWaitlistCount();
+      const [count, { data: emails }] = await Promise.all([
+        WaitlistRepository.getWaitlistCount(),
+        WaitlistRepository.getWaitlistEmails({ limit: 1000 }) // Ajuste o limite conforme necessário
+      ]);
+
       return {
         success: true,
         data: {
           count,
           lastUpdated: new Date().toISOString(),
+          emails: emails.map(email => ({
+            ...email,
+            created_at: email.created_at.toISOString(),
+          }))
         },
       };
     } catch (error) {

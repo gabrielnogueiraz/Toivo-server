@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import {
   joinWaitlistSchema,
   waitlistResponseSchema,
+  waitlistStatsResponseSchema
 } from "./waitlist.schema.js";
 import { WaitlistController } from "./waitlist.controller.js";
 import { zodToJsonSchema } from "zod-to-json-schema";
@@ -39,55 +40,14 @@ export async function waitlistRoutes(fastify: FastifyInstance) {
   );
 
   fastify.get(
-    "/waitlist/stats",
+    "/stats",
     {
       schema: {
         description: "Get waitlist statistics",
         tags: ["Waitlist"],
         summary: "Get waitlist stats",
         response: {
-          200: {
-            description: "Waitlist statistics",
-            type: "object",
-            properties: {
-              success: { type: "boolean" },
-              data: {
-                type: "object",
-                properties: {
-                  count: { type: "number" },
-                  lastUpdated: { type: "string", format: "date-time" },
-                },
-              },
-            },
-          },
-          401: {
-            description: "Unauthorized",
-            type: "object",
-            properties: {
-              success: { type: "boolean" },
-              error: {
-                type: "object",
-                properties: {
-                  message: { type: "string" },
-                  code: { type: "string" },
-                },
-              },
-            },
-          },
-          500: {
-            description: "Internal server error",
-            type: "object",
-            properties: {
-              success: { type: "boolean" },
-              error: {
-                type: "object",
-                properties: {
-                  message: { type: "string" },
-                  code: { type: "string" },
-                },
-              },
-            },
-          },
+          200: waitlistStatsResponseSchema,
         },
       },
     },

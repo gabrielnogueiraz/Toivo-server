@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { z } from "zod";
-import { joinWaitlistSchema, WaitlistResponse } from "./waitlist.schema.js";
+import { joinWaitlistSchema, WaitlistResponse, WaitlistStatsResponse } from "./waitlist.schema.js";
 import { WaitlistService } from "./waitlist.service.js";
 
 export class WaitlistController {
@@ -68,19 +68,23 @@ export class WaitlistController {
     }
   }
 
-  static async getWaitlistStats(_request: FastifyRequest, reply: FastifyReply) {
+  static async getWaitlistStats(
+    _request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<WaitlistStatsResponse> {
     try {
       const stats = await WaitlistService.getWaitlistStats();
       return reply.send(stats);
     } catch (error) {
       console.error("Error getting waitlist stats:", error);
-      return reply.status(500).send({
+      return {
         success: false,
-        error: {
-          message: "Failed to get waitlist stats",
-          code: "INTERNAL_SERVER_ERROR",
-        },
-      });
+        data: {
+          count: 0,
+          lastUpdated: new Date().toISOString(),
+          emails: []
+        }
+      } as WaitlistStatsResponse;
     }
   }
 }
