@@ -16,10 +16,35 @@ declare module '@fastify/jwt' {
 }
 
 import { appConfig, corsConfig, jwtConfig, serverConfig } from "./config/app.config.js";
+import { prisma } from "./config/db.config.js";
 import { UserPayload } from "./types/fastify.js";
 import waitlistRoutes from "./modules/waitlist/waitlist.routes.js";
 import userRoutes from './modules/user/user.routes.js';
 import notificationRoutes from './modules/notification/notification.routes.js';
+
+// Importações dos novos módulos
+import boardRoutes from "./modules/board/board.routes.js";
+import columnRoutes from "./modules/column/column.routes.js";
+import taskRoutes from "./modules/task/task.routes.js";
+import pomodoroRoutes from "./modules/pomodoro/pomodoro.routes.js";
+
+// Importações dos controladores
+import { BoardController } from "./modules/board/board.controller.js";
+import { ColumnController } from "./modules/column/column.controller.js";
+import { TaskController } from "./modules/task/task.controller.js";
+import { PomodoroController } from "./modules/pomodoro/pomodoro.controller.js";
+
+// Importações dos services
+import { BoardService } from "./modules/board/board.service.js";
+import { ColumnService } from "./modules/column/column.service.js";
+import { TaskService } from "./modules/task/task.service.js";
+import { PomodoroService } from "./modules/pomodoro/pomodoro.service.js";
+
+// Importações dos repositories
+import { BoardRepository } from "./modules/board/board.repository.js";
+import { ColumnRepository } from "./modules/column/column.repository.js";
+import { TaskRepository } from "./modules/task/task.repository.js";
+import { PomodoroRepository } from "./modules/pomodoro/pomodoro.repository.js";
 
 export async function buildApp() {
   const app = fastify(appConfig).withTypeProvider<ZodTypeProvider>();
@@ -64,13 +89,25 @@ export async function buildApp() {
     staticCSP: true,
   });
 
-  app.decorate(
-    "authenticate",
-    async function (
-      this: FastifyInstance,
-      request: FastifyRequest,
-      reply: FastifyReply
-    ) {
+  // Instanciar repositories
+  const boardRepository = new BoardRepository(prisma);
+  const columnRepository = new ColumnRepository(prisma);
+  const taskRepository = new TaskRepository(prisma);
+  const pomodoroRepository = new PomodoroRepository(prisma);
+
+  // Instanciar services
+  const boardService = new BoardService(boardRepository, columnRepository);
+  const columnService = new ColumnService(columnRepository);
+  const taskService = new TaskService(taskRepository);
+  const pomodoroService = new PomodoroService(pomodoroRepository);
+
+  // Instanciar controllers
+  const boardController = new BoardController(boardService);
+  const columnController = new ColumnController(columnService);
+  const taskController = new TaskController(taskService);
+  const pomodoroController = new PomodoroController(pomodoroService);
+
+  app.decorate("authenticate", async function (request: FastifyRequest, reply: FastifyReply) {
       try {
         await request.jwtVerify();
       } catch (err) {
@@ -90,9 +127,13 @@ export async function buildApp() {
   });
   app.register(
     async (api) => {
-            api.register(waitlistRoutes, { prefix: "/waitlist" });
-            api.register(userRoutes, { prefix: '/users' });
+      api.register(waitlistRoutes, { prefix: "/waitlist" });
+      api.register(userRoutes, { prefix: '/users' });
       api.register(notificationRoutes, { prefix: '/notifications' });
+      api.register((subApi) => boardRoutes(subApi, boardController), { prefix: '/boards' });
+      api.register((subApi) => columnRoutes(subApi, columnController), { prefix: '/columns' });
+      api.register((subApi) => taskRoutes(subApi, taskController), { prefix: '/tasks' });
+      api.register((subApi) => pomodoroRoutes(subApi, pomodoroController), { prefix: '/pomodoro' });
     },
     { prefix: "/api/v1" }
   );
