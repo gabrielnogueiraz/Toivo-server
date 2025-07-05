@@ -59,4 +59,12 @@ export default async function userRoutes(app: AppType) {
     },
     handler: userController.findUsersByNameHandler,
   });
+
+  app.post('/refresh', {
+    handler: userController.refreshTokenHandler,
+  });
+
+  app.post('/logout', {
+    handler: userController.logoutHandler,
+  });
 }

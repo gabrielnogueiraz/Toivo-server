@@ -53,4 +53,40 @@ export const userService = {
     // Remove password hashes from the response
     return users.map(({ passwordHash, ...userWithoutPassword }) => userWithoutPassword);
   },
+
+  async updateUser(userId: string, updateData: { email?: string; name?: string }) {
+    // Verificar se o email já existe (se estiver sendo atualizado)
+    if (updateData.email) {
+      const existingUser = await userRepository.findUserByEmail(updateData.email);
+      if (existingUser && existingUser.id !== userId) {
+        throw new Error('Email already exists');
+      }
+    }
+
+    const updatedUser = await userRepository.updateUser(userId, updateData);
+    const { passwordHash: _, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  },
+
+  async updateUserAvatar(userId: string, profileImage: string) {
+    const updatedUser = await userRepository.updateUserAvatar(userId, profileImage);
+    const { passwordHash: _, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  },
+
+  async updateUserTheme(userId: string, theme: string) {
+    const updatedUser = await userRepository.updateUserTheme(userId, theme);
+    const { passwordHash: _, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
+  },
+
+  async findUserById(userId: string) {
+    const user = await userRepository.findUserById(userId);
+    if (!user) {
+      return null;
+    }
+    
+    const { passwordHash: _, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+  },
 };
