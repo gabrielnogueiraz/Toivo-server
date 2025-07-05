@@ -58,6 +58,7 @@ export async function buildApp() {
   });
   await app.register(fastifyJwt, {
     secret: jwtConfig.secret,
+    sign: jwtConfig.sign,
     cookie: {
       cookieName: "refreshToken",
       signed: false,
@@ -109,8 +110,71 @@ export async function buildApp() {
 
   app.decorate("authenticate", async function (request: FastifyRequest, reply: FastifyReply) {
       try {
+        // Tentar verificar o JWT
         await request.jwtVerify();
-      } catch (err) {
+        
+        // Se chegou até aqui, o token é válido
+        // Buscar dados completos do usuário
+        const userId = request.user?.id;
+        
+        if (userId) {
+          const user = await prisma.user.findUnique({
+            where: { id: userId },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              theme: true,
+              profileImage: true,
+              createdAt: true,
+              updatedAt: true
+            }
+          });
+
+          if (user) {
+            request.user = user;
+            return;
+          }
+        }
+        
+        throw new Error('User not found');
+        
+      } catch (err: any) {
+        // Se o token de acesso expirou, verificar se há um refresh token válido
+        if (err.code === 'FAST_JWT_EXPIRED' || err.message.includes('expired')) {
+          const refreshToken = request.cookies.refreshToken;
+          
+          if (refreshToken) {
+            try {
+              const decoded = request.server.jwt.verify(refreshToken) as { id: string };
+              
+              // Verificar se o usuário ainda existe
+              const user = await prisma.user.findUnique({
+                where: { id: decoded.id },
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  theme: true,
+                  profileImage: true,
+                  createdAt: true,
+                  updatedAt: true
+                }
+              });
+
+              if (user) {
+                // Adicionar o usuário ao request para uso posterior
+                request.user = user;
+                return;
+              }
+            } catch (refreshError) {
+              // Refresh token também é inválido
+              console.error('Invalid refresh token:', refreshError);
+            }
+          }
+        }
+        
+        console.error('Authentication error:', err);
         reply.status(401).send({
           success: false,
           error: {

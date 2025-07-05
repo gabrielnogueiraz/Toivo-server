@@ -56,7 +56,7 @@ export const jwtConfig = {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/api/auth/refresh",
+    path: "/", // Permitir acesso ao cookie em toda a aplicação
     maxAge: 7 * 24 * 60 * 60,
   },
 };
