@@ -2,9 +2,13 @@ import { FastifyRequest as OriginalFastifyRequest, FastifyReply, FastifyInstance
 import { JWT } from '@fastify/jwt';
 
 export interface UserPayload {
-  id: number;
+  id: string;
+  name: string;
   email: string;
-  role: string;
+  theme: string;
+  profileImage: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 declare module 'fastify' {
@@ -19,5 +23,7 @@ declare module 'fastify' {
 }
 
 declare module '@fastify/jwt' {
-  interface FastifyJWT extends UserPayload {}
+  interface FastifyJWT {
+    user: { id: string };
+  }
 }
