@@ -50,6 +50,20 @@ model User {
   boards        Board[]
   tasks         Task[]
   pomodoros     Pomodoro[]
+  pomodoroSettings PomodoroSettings?
+}
+
+model PomodoroSettings {
+  id               String @id @default(cuid())
+  focusDuration    Int    @default(25)  // em minutos
+  shortBreakTime   Int    @default(5)   // em minutos
+  longBreakTime    Int    @default(15)  // em minutos
+  userId           String @unique
+  user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@map("pomodoro_settings")
 }
 
 model Notification {
