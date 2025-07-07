@@ -22,8 +22,16 @@ export const pomodoroParamsSchema = z.object({
   id: z.string().cuid('ID inválido')
 });
 
+// Schema para query de tarefas disponíveis
+export const availableTasksQuerySchema = z.object({
+  boardId: z.string().cuid('ID do board inválido').optional(),
+  priority: z.enum(['LOW', 'MEDIUM', 'HIGH']).optional(),
+  search: z.string().min(1).optional()
+});
+
 // Tipos inferidos
 export type StartPomodoroInput = z.infer<typeof startPomodoroSchema>;
 export type PausePomodoroInput = z.infer<typeof pausePomodoroSchema>;
 export type FinishPomodoroInput = z.infer<typeof finishPomodoroSchema>;
 export type PomodoroParamsInput = z.infer<typeof pomodoroParamsSchema>;
+export type AvailableTasksQuery = z.infer<typeof availableTasksQuerySchema>;

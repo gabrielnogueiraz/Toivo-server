@@ -1,5 +1,5 @@
 import { PrismaClient, PomodoroStatus } from '@prisma/client';
-import { StartPomodoroInput } from './pomodoro.schema.js';
+import { StartPomodoroInput, AvailableTasksQuery } from './pomodoro.schema.js';
 
 export class PomodoroRepository {
   constructor(private prisma: PrismaClient) {}
@@ -206,5 +206,72 @@ export class PomodoroRepository {
       where: { id, userId }
     });
     return !!pomodoro;
+  }
+
+  async getAvailableTasks(userId: string, filters?: AvailableTasksQuery) {
+    const where: any = { 
+      userId
+    };
+
+    // Aplicar filtros se fornecidos
+    if (filters?.boardId) {
+      where.column = {
+        boardId: filters.boardId
+      };
+    }
+
+    if (filters?.priority) {
+      where.priority = filters.priority;
+    }
+
+    if (filters?.search) {
+      where.OR = [
+        {
+          title: {
+            contains: filters.search,
+            mode: 'insensitive'
+          }
+        },
+        {
+          description: {
+            contains: filters.search,
+            mode: 'insensitive'
+          }
+        }
+      ];
+    }
+
+    return await this.prisma.task.findMany({
+      where,
+      include: {
+        column: {
+          include: {
+            board: {
+              select: {
+                id: true,
+                title: true
+              }
+            }
+          }
+        },
+        _count: {
+          select: {
+            pomodoros: {
+              where: {
+                status: 'COMPLETED'
+              }
+            }
+          }
+        }
+      },
+      orderBy: [
+        {
+          priority: 'desc'
+        },
+        {
+          createdAt: 'desc'
+        }
+      ]
+    });
   }
 }

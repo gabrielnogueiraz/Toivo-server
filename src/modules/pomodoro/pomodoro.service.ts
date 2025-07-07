@@ -1,5 +1,5 @@
 import { PomodoroRepository } from './pomodoro.repository.js';
-import { StartPomodoroInput } from './pomodoro.schema.js';
+import { StartPomodoroInput, AvailableTasksQuery } from './pomodoro.schema.js';
 
 // Cache interface para evitar polling excessivo
 interface CacheEntry {
@@ -221,6 +221,46 @@ export class PomodoroService {
         error: {
           message: error instanceof Error ? error.message : 'Erro ao buscar pomodoros do usuário',
           code: 'POMODORO_FETCH_ERROR'
+        }
+      };
+    }
+  }
+
+  async getAvailableTasks(userId: string, filters?: AvailableTasksQuery) {
+    try {
+      const tasks = await this.pomodoroRepository.getAvailableTasks(userId, filters);
+      
+      // Transformar os dados para um formato mais amigável para o frontend
+      const formattedTasks = tasks.map(task => ({
+        id: task.id,
+        title: task.title,
+        description: task.description,
+        priority: task.priority,
+        column: {
+          id: task.column.id,
+          title: task.column.title
+        },
+        board: {
+          id: task.column.board.id,
+          title: task.column.board.title
+        },
+        completedPomodoros: task._count.pomodoros,
+        startAt: task.startAt,
+        endAt: task.endAt,
+        createdAt: task.createdAt,
+        updatedAt: task.updatedAt
+      }));
+
+      return {
+        success: true,
+        data: formattedTasks
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          message: error instanceof Error ? error.message : 'Erro ao buscar tarefas disponíveis',
+          code: 'TASKS_FETCH_ERROR'
         }
       };
     }

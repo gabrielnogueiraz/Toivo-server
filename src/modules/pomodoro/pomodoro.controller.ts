@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { PomodoroService } from './pomodoro.service.js';
-import { StartPomodoroInput, PomodoroParamsInput } from './pomodoro.schema.js';
+import { StartPomodoroInput, PomodoroParamsInput, AvailableTasksQuery } from './pomodoro.schema.js';
 
 export class PomodoroController {
   private lastRequestTime: Map<string, number> = new Map();
@@ -15,6 +15,7 @@ export class PomodoroController {
     this.getActivePomodoro = this.getActivePomodoro.bind(this);
     this.getPomodoroById = this.getPomodoroById.bind(this);
     this.getUserPomodoros = this.getUserPomodoros.bind(this);
+    this.getAvailableTasks = this.getAvailableTasks.bind(this);
   }
 
   async startPomodoro(
@@ -157,6 +158,26 @@ export class PomodoroController {
     
     if (result.success) {
       return reply.status(200).send(result);
+    } else {
+      return reply.status(400).send(result);
+    }
+  }
+
+  async getAvailableTasks(
+    request: FastifyRequest<{ Querystring: AvailableTasksQuery }>,
+    reply: FastifyReply
+  ) {
+    const userId = request.user.id;
+    const filters = request.query;
+    
+    const result = await this.pomodoroService.getAvailableTasks(userId, filters);
+    
+    if (result.success) {
+      return reply.status(200).send({
+        success: true,
+        data: { tasks: result.data },
+        message: 'Tarefas disponíveis recuperadas com sucesso'
+      });
     } else {
       return reply.status(400).send(result);
     }

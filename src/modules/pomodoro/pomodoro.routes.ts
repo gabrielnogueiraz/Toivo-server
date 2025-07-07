@@ -1,5 +1,5 @@
 import { AppType } from '../../app.js';
-import { startPomodoroSchema, pomodoroParamsSchema } from './pomodoro.schema.js';
+import { startPomodoroSchema, pomodoroParamsSchema, availableTasksQuerySchema } from './pomodoro.schema.js';
 
 export default async function pomodoroRoutes(app: AppType, pomodoroController: any) {
   // Iniciar pomodoro
@@ -36,6 +36,15 @@ export default async function pomodoroRoutes(app: AppType, pomodoroController: a
     },
     preHandler: [app.authenticate],
     handler: pomodoroController.finishPomodoro,
+  });
+
+  // Buscar tarefas disponíveis para pomodoro
+  app.get('/tasks', {
+    schema: {
+      querystring: availableTasksQuerySchema
+    },
+    preHandler: [app.authenticate],
+    handler: pomodoroController.getAvailableTasks,
   });
 
   // Buscar pomodoro ativo
