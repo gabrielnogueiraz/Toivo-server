@@ -1,7 +1,21 @@
 import { AppType } from '../../app.js';
-import { startPomodoroSchema, pomodoroParamsSchema, availableTasksQuerySchema } from './pomodoro.schema.js';
+import { startPomodoroSchema, pomodoroParamsSchema, availableTasksQuerySchema, updatePomodoroSettingsSchema } from './pomodoro.schema.js';
 
 export default async function pomodoroRoutes(app: AppType, pomodoroController: any) {
+  // Configurações do usuário
+  app.get('/settings', {
+    preHandler: [app.authenticate],
+    handler: pomodoroController.getUserSettings,
+  });
+
+  app.put('/settings', {
+    schema: {
+      body: updatePomodoroSettingsSchema,
+    },
+    preHandler: [app.authenticate],
+    handler: pomodoroController.updateUserSettings,
+  });
+
   // Iniciar pomodoro
   app.post('/start', {
     schema: {

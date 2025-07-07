@@ -1,8 +1,42 @@
 import { PrismaClient, PomodoroStatus } from '@prisma/client';
-import { StartPomodoroInput, AvailableTasksQuery } from './pomodoro.schema.js';
+import { StartPomodoroInput, AvailableTasksQuery, PomodoroSettingsInput, UpdatePomodoroSettingsInput } from './pomodoro.schema.js';
 
 export class PomodoroRepository {
   constructor(private prisma: PrismaClient) {}
+
+  // Configurações do Pomodoro
+  async getUserSettings(userId: string) {
+    let settings = await this.prisma.pomodoroSettings.findUnique({
+      where: { userId }
+    });
+
+    // Se não existir configuração, cria uma com valores padrão
+    if (!settings) {
+      settings = await this.prisma.pomodoroSettings.create({
+        data: {
+          userId,
+          focusDuration: 25,
+          shortBreakTime: 5,
+          longBreakTime: 15
+        }
+      });
+    }
+
+    return settings;
+  }
+
+  async updateUserSettings(userId: string, data: UpdatePomodoroSettingsInput) {
+    // Primeiro garante que as configurações existem
+    await this.getUserSettings(userId);
+    
+    return await this.prisma.pomodoroSettings.update({
+      where: { userId },
+      data: {
+        ...data,
+        updatedAt: new Date()
+      }
+    });
+  }
 
   async create(data: StartPomodoroInput, userId: string) {
     // Verifica se a tarefa pertence ao usuário
@@ -28,13 +62,35 @@ export class PomodoroRepository {
       throw new Error('Você já tem um pomodoro ativo. Finalize-o antes de iniciar outro.');
     }
 
+    // Busca as configurações do usuário ou usa valores padrão
+    const userSettings = await this.getUserSettings(userId);
+    
+    console.log('Debug - Data recebido:', data);
+    console.log('Debug - Configurações do usuário:', userSettings);
+    
+    // Determina a duração: usa valor customizado se fornecido, senão usa configuração do usuário
+    const duration = (data.duration !== undefined && data.duration > 0) 
+      ? data.duration 
+      : userSettings.focusDuration;
+    
+    // Determina o tempo de pausa: usa valor customizado se fornecido, senão usa configuração do usuário
+    const breakTime = (data.breakTime !== undefined && data.breakTime > 0) 
+      ? data.breakTime 
+      : userSettings.shortBreakTime;
+    
+    const pomodoroData = {
+      taskId: data.taskId,
+      duration,
+      breakTime,
+      userId,
+      status: PomodoroStatus.IN_PROGRESS,
+      startedAt: new Date()
+    };
+
+    console.log('Debug - Dados do pomodoro criado:', pomodoroData);
+
     return await this.prisma.pomodoro.create({
-      data: {
-        ...data,
-        userId,
-        status: PomodoroStatus.IN_PROGRESS,
-        startedAt: new Date()
-      },
+      data: pomodoroData,
       include: {
         task: {
           include: {

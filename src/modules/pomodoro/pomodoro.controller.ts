@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { PomodoroService } from './pomodoro.service.js';
-import { StartPomodoroInput, PomodoroParamsInput, AvailableTasksQuery } from './pomodoro.schema.js';
+import { StartPomodoroInput, PomodoroParamsInput, AvailableTasksQuery, UpdatePomodoroSettingsInput } from './pomodoro.schema.js';
 
 export class PomodoroController {
   private lastRequestTime: Map<string, number> = new Map();
@@ -16,6 +16,8 @@ export class PomodoroController {
     this.getPomodoroById = this.getPomodoroById.bind(this);
     this.getUserPomodoros = this.getUserPomodoros.bind(this);
     this.getAvailableTasks = this.getAvailableTasks.bind(this);
+    this.getUserSettings = this.getUserSettings.bind(this);
+    this.updateUserSettings = this.updateUserSettings.bind(this);
   }
 
   async startPomodoro(
@@ -178,6 +180,35 @@ export class PomodoroController {
         data: { tasks: result.data },
         message: 'Tarefas disponíveis recuperadas com sucesso'
       });
+    } else {
+      return reply.status(400).send(result);
+    }
+  }
+
+  // Configurações do usuário
+  async getUserSettings(
+    request: FastifyRequest,
+    reply: FastifyReply
+  ) {
+    const userId = request.user.id;
+    const result = await this.pomodoroService.getUserSettings(userId);
+    
+    if (result.success) {
+      return reply.status(200).send(result);
+    } else {
+      return reply.status(500).send(result);
+    }
+  }
+
+  async updateUserSettings(
+    request: FastifyRequest<{ Body: UpdatePomodoroSettingsInput }>,
+    reply: FastifyReply
+  ) {
+    const userId = request.user.id;
+    const result = await this.pomodoroService.updateUserSettings(userId, request.body);
+    
+    if (result.success) {
+      return reply.status(200).send(result);
     } else {
       return reply.status(400).send(result);
     }

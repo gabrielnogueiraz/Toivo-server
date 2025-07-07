@@ -1,5 +1,5 @@
 import { PomodoroRepository } from './pomodoro.repository.js';
-import { StartPomodoroInput, AvailableTasksQuery } from './pomodoro.schema.js';
+import { StartPomodoroInput, AvailableTasksQuery, UpdatePomodoroSettingsInput } from './pomodoro.schema.js';
 
 // Cache interface para evitar polling excessivo
 interface CacheEntry {
@@ -18,6 +18,43 @@ export class PomodoroService {
     this.cleanupInterval = setInterval(() => {
       this.clearExpiredCache();
     }, 30000);
+  }
+
+  // Configurações do Pomodoro
+  async getUserSettings(userId: string) {
+    try {
+      const settings = await this.pomodoroRepository.getUserSettings(userId);
+      return {
+        success: true,
+        data: settings
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          message: error instanceof Error ? error.message : 'Erro ao buscar configurações',
+          code: 'SETTINGS_FETCH_ERROR'
+        }
+      };
+    }
+  }
+
+  async updateUserSettings(userId: string, data: UpdatePomodoroSettingsInput) {
+    try {
+      const settings = await this.pomodoroRepository.updateUserSettings(userId, data);
+      return {
+        success: true,
+        data: settings
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          message: error instanceof Error ? error.message : 'Erro ao atualizar configurações',
+          code: 'SETTINGS_UPDATE_ERROR'
+        }
+      };
+    }
   }
 
   async startPomodoro(data: StartPomodoroInput, userId: string) {
