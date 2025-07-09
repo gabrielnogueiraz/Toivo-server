@@ -23,7 +23,8 @@ export const updateTaskSchema = z.object({
   startAt: z.string().datetime('Data de início inválida').transform(str => new Date(str)).optional(),
   endAt: z.string().datetime('Data de fim inválida').transform(str => new Date(str)).optional(),
   pomodoroGoal: z.number().int().min(1, 'Meta de pomodoros deve ser no mínimo 1').max(20, 'Meta de pomodoros deve ser no máximo 20').optional(),
-  columnId: z.string().cuid('ID da coluna inválido').optional()
+  columnId: z.string().cuid('ID da coluna inválido').optional(),
+  completed: z.boolean().optional()
 });
 
 // Schema para mover tarefa

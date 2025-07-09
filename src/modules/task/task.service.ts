@@ -1,8 +1,18 @@
 import { TaskRepository } from './task.repository.js';
 import { CreateTaskInput, UpdateTaskInput } from './task.schema.js';
+import { TaskCompletionService } from './task-completion.service.js';
+import { GardenService } from '../garden/garden.service.js';
+import { GardenRepository } from '../garden/garden.repository.js';
+import { prisma } from '../../config/db.config.js';
 
 export class TaskService {
-  constructor(private taskRepository: TaskRepository) {}
+  private taskCompletionService: TaskCompletionService;
+
+  constructor(private taskRepository: TaskRepository) {
+    const gardenRepository = new GardenRepository(prisma);
+    const gardenService = new GardenService(gardenRepository);
+    this.taskCompletionService = new TaskCompletionService(prisma, gardenService);
+  }
 
   async createTask(data: CreateTaskInput, userId: string) {
     try {
@@ -157,6 +167,31 @@ export class TaskService {
         }
       };
     }
+  }
+
+  async completeTask(id: string, userId: string) {
+    try {
+      const result = await this.taskCompletionService.manuallyCompleteTask(id, userId);
+      return {
+        success: true,
+        data: result
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          message: error instanceof Error ? error.message : 'Erro ao completar tarefa',
+          code: 'TASK_COMPLETE_ERROR'
+        }
+      };
+    }
+  }
+
+  private isCompletedColumn(columnTitle: string): boolean {
+    const completedKeywords = ['concluí', 'done', 'finalizada', 'completa', 'terminada'];
+    return completedKeywords.some(keyword => 
+      columnTitle.toLowerCase().includes(keyword.toLowerCase())
+    );
   }
 
   async getTasksByColumn(columnId: string, userId: string) {

@@ -12,6 +12,7 @@ export class TaskController {
     this.deleteTask = this.deleteTask.bind(this);
     this.moveTask = this.moveTask.bind(this);
     this.getTasksByColumn = this.getTasksByColumn.bind(this);
+    this.completeTask = this.completeTask.bind(this);
   }
 
   async createTask(
@@ -110,6 +111,21 @@ export class TaskController {
     const userId = request.user.id;
     const { columnId } = request.params;
     const result = await this.taskService.getTasksByColumn(columnId, userId);
+    
+    if (result.success) {
+      return reply.status(200).send(result);
+    } else {
+      return reply.status(400).send(result);
+    }
+  }
+
+  async completeTask(
+    request: FastifyRequest<{ Params: TaskParamsInput }>,
+    reply: FastifyReply
+  ) {
+    const userId = request.user.id;
+    const { id } = request.params;
+    const result = await this.taskService.completeTask(id, userId);
     
     if (result.success) {
       return reply.status(200).send(result);

@@ -55,6 +55,15 @@ export default async function taskRoutes(app: AppType, taskController: any) {
     handler: taskController.moveTask,
   });
 
+  // Marcar tarefa como concluída
+  app.patch('/:id/complete', {
+    schema: {
+      params: taskParamsSchema,
+    },
+    preHandler: [app.authenticate],
+    handler: taskController.completeTask,
+  });
+
   // Listar tarefas de uma coluna específica
   app.get('/column/:columnId', {
     schema: {
