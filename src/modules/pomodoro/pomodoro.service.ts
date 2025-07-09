@@ -1,5 +1,9 @@
 import { PomodoroRepository } from './pomodoro.repository.js';
 import { StartPomodoroInput, AvailableTasksQuery, UpdatePomodoroSettingsInput } from './pomodoro.schema.js';
+import { TaskCompletionService } from '../task/task-completion.service.js';
+import { GardenService } from '../garden/garden.service.js';
+import { GardenRepository } from '../garden/garden.repository.js';
+import { prisma } from '../../config/db.config.js';
 
 // Cache interface para evitar polling excessivo
 interface CacheEntry {
@@ -12,12 +16,18 @@ export class PomodoroService {
   private cache: Map<string, CacheEntry> = new Map();
   private readonly DEFAULT_TTL = 3000; // 3 segundos de cache para pomodoro ativo
   private cleanupInterval: NodeJS.Timeout;
+  private taskCompletionService: TaskCompletionService;
 
   constructor(private pomodoroRepository: PomodoroRepository) {
     // Limpa o cache expirado a cada 30 segundos
     this.cleanupInterval = setInterval(() => {
       this.clearExpiredCache();
     }, 30000);
+
+    // Inicializar TaskCompletionService
+    const gardenRepository = new GardenRepository(prisma);
+    const gardenService = new GardenService(gardenRepository);
+    this.taskCompletionService = new TaskCompletionService(prisma, gardenService);
   }
 
   // Configurações do Pomodoro
@@ -130,10 +140,35 @@ export class PomodoroService {
       // Limpa o cache do usuário quando o pomodoro é finalizado
       this.clearUserCache(userId);
       
-      return {
-        success: true,
-        data: pomodoro
-      };
+      // Verifica se a tarefa foi completada após este pomodoro
+      try {
+        const completionResult = await this.taskCompletionService.checkTaskCompletionAfterPomodoro(
+          pomodoro.taskId, 
+          userId
+        );
+        
+        return {
+          success: true,
+          data: {
+            pomodoro,
+            taskCompletion: completionResult
+          }
+        };
+      } catch (completionError) {
+        console.error('Error checking task completion:', completionError);
+        // Mesmo se a verificação de completion falhar, retornamos o pomodoro finalizado
+        return {
+          success: true,
+          data: {
+            pomodoro,
+            taskCompletion: {
+              taskCompleted: false,
+              flowersCreated: false,
+              error: completionError instanceof Error ? completionError.message : 'Unknown error'
+            }
+          }
+        };
+      }
     } catch (error) {
       return {
         success: false,
