@@ -27,6 +27,7 @@ import boardRoutes from "./modules/board/board.routes.js";
 import columnRoutes from "./modules/column/column.routes.js";
 import taskRoutes from "./modules/task/task.routes.js";
 import pomodoroRoutes from "./modules/pomodoro/pomodoro.routes.js";
+import gardenRoutes from "./modules/garden/garden.routes.js";
 
 // Importações dos controladores
 import { BoardController } from "./modules/board/board.controller.js";
@@ -194,6 +195,7 @@ export async function buildApp() {
       api.register(waitlistRoutes, { prefix: "/waitlist" });
       api.register(userRoutes, { prefix: '/users' });
       api.register(notificationRoutes, { prefix: '/notifications' });
+      api.register(gardenRoutes);
       api.register((subApi) => boardRoutes(subApi, boardController), { prefix: '/boards' });
       api.register((subApi) => columnRoutes(subApi, columnController), { prefix: '/columns' });
       api.register((subApi) => taskRoutes(subApi, taskController), { prefix: '/tasks' });
