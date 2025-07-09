@@ -25,6 +25,11 @@ enum PomodoroStatus {
   CANCELLED
 }
 
+enum FlowerType {
+  NORMAL
+  LEGENDARY
+}
+
 model WaitlistEmail {
   id         Int      @id @default(autoincrement())
   email      String   @unique @db.VarChar(255)
@@ -51,6 +56,7 @@ model User {
   tasks         Task[]
   pomodoros     Pomodoro[]
   pomodoroSettings PomodoroSettings?
+  gardenFlowers GardenFlower[]
 }
 
 model PomodoroSettings {
@@ -110,11 +116,13 @@ model Task {
   startAt      DateTime?
   endAt        DateTime?
   pomodoroGoal Int      @default(1)
+  completed    Boolean  @default(false)
   columnId     String
   column       Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   pomodoros    Pomodoro[]
+  gardenFlowers GardenFlower[]
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -137,4 +145,22 @@ model Pomodoro {
   updatedAt   DateTime       @updatedAt
 
   @@map("pomodoros")
+}
+
+model GardenFlower {
+  id            String     @id @default(cuid())
+  userId        String
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  taskId        String
+  task          Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  type          FlowerType @default(NORMAL)
+  priority      Priority
+  color         String?
+  legendaryName String?
+  customName    String?
+  tags          String[]   @default([])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@map("garden_flowers")
 }
