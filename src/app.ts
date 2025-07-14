@@ -29,6 +29,9 @@ import taskRoutes from "./modules/task/task.routes.js";
 import pomodoroRoutes from "./modules/pomodoro/pomodoro.routes.js";
 import gardenRoutes from "./modules/garden/garden.routes.js";
 
+// Importação para integração com Lumi
+import { lumiAuthRoutes } from "./routes/lumiAuth.js";
+
 // Importações dos controladores
 import { BoardController } from "./modules/board/board.controller.js";
 import { ColumnController } from "./modules/column/column.controller.js";
@@ -200,6 +203,9 @@ export async function buildApp() {
       api.register((subApi) => columnRoutes(subApi, columnController), { prefix: '/columns' });
       api.register((subApi) => taskRoutes(subApi, taskController), { prefix: '/tasks' });
       api.register((subApi) => pomodoroRoutes(subApi, pomodoroController), { prefix: '/pomodoro' });
+      
+      // Rotas de integração com Lumi
+      api.register(lumiAuthRoutes);
     },
     { prefix: "/api/v1" }
   );
