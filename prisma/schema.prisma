@@ -1,14 +1,165 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
 }
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model WaitlistEmail {
+  id         Int      @id @default(autoincrement())
+  email      String   @unique @db.VarChar(255)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+  ip_address String?  @db.VarChar(45)
+
+  @@map("waitlist_emails")
+}
+
+model User {
+  id               String            @id @default(cuid())
+  email            String            @unique
+  passwordHash     String
+  theme            String            @default("default")
+  profileImage     String?
+  sequence         Int               @default(0)
+  lastCheckIn      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  name             String
+  LumiMemory       LumiMemory[]
+  notifications    Notification[]
+  boards           Board[]
+  gardenFlowers    GardenFlower[]
+  pomodoroSettings PomodoroSettings?
+  pomodoros        Pomodoro[]
+  tasks            Task[]
+}
+
+model PomodoroSettings {
+  id             String   @id @default(cuid())
+  focusDuration  Int      @default(25)
+  shortBreakTime Int      @default(5)
+  longBreakTime  Int      @default(15)
+  userId         String   @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("pomodoro_settings")
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Board {
+  id        String   @id @default(cuid())
+  title     String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  columns   Column[]
+
+  @@map("boards")
+}
+
+model Column {
+  id        String   @id @default(cuid())
+  title     String
+  order     Int
+  boardId   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  tasks     Task[]
+
+  @@map("columns")
+}
+
+model Task {
+  id            String         @id @default(cuid())
+  title         String
+  description   String?
+  priority      Priority
+  startAt       DateTime?
+  endAt         DateTime?
+  pomodoroGoal  Int            @default(1)
+  columnId      String
+  userId        String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  completed     Boolean        @default(false)
+  gardenFlowers GardenFlower[]
+  pomodoros     Pomodoro[]
+  column        Column         @relation(fields: [columnId], references: [id], onDelete: Cascade)
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("tasks")
+}
+
+model Pomodoro {
+  id          String         @id @default(cuid())
+  duration    Int            @default(25)
+  breakTime   Int            @default(5)
+  status      PomodoroStatus @default(PENDING)
+  startedAt   DateTime?
+  pausedAt    DateTime?
+  completedAt DateTime?
+  taskId      String
+  userId      String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  task        Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("pomodoros")
+}
+
+model GardenFlower {
+  id            String     @id @default(cuid())
+  userId        String
+  taskId        String
+  type          FlowerType @default(NORMAL)
+  priority      Priority
+  color         String?
+  legendaryName String?
+  customName    String?
+  tags          String[]   @default([])
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  task          Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("garden_flowers")
+}
+
+model LumiMemory {
+  id                  String          @id
+  userId              String
+  type                MemoryType
+  content             String
+  importance          ImportanceLevel @default(MEDIUM)
+  emotionalContext    String?
+  productivityPattern String?
+  communicationStyle  String?
+  createdAt           DateTime        @default(now())
+  updatedAt           DateTime
+  expiresAt           DateTime?
+  tags                String[]        @default([])
+  User                User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([importance])
+  @@index([type])
+  @@index([userId])
 }
 
 enum Priority {
@@ -30,137 +181,23 @@ enum FlowerType {
   LEGENDARY
 }
 
-model WaitlistEmail {
-  id         Int      @id @default(autoincrement())
-  email      String   @unique @db.VarChar(255)
-  created_at DateTime @default(now()) @db.Timestamptz(6)
-  ip_address String?  @db.VarChar(45) // For optional IP tracking
-  
-  @@map("waitlist_emails") // Explicit table name in snake_case
+enum ImportanceLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
 }
 
-model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String
-  passwordHash  String
-  theme         String    @default("default")
-  profileImage  String?
-  sequence      Int       @default(0)
-  lastCheckIn   DateTime? 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-
-  notifications Notification[]
-  boards        Board[]
-  tasks         Task[]
-  pomodoros     Pomodoro[]
-  pomodoroSettings PomodoroSettings?
-  gardenFlowers GardenFlower[]
-}
-
-model PomodoroSettings {
-  id               String @id @default(cuid())
-  focusDuration    Int    @default(25)  // em minutos
-  shortBreakTime   Int    @default(5)   // em minutos
-  longBreakTime    Int    @default(15)  // em minutos
-  userId           String @unique
-  user             User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
-
-  @@map("pomodoro_settings")
-}
-
-model Notification {
-  id        String   @id @default(cuid())
-  title     String
-  message   String
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-
-  user   User   @relation(fields: [userId], references: [id])
-  userId String
-}
-
-model Board {
-  id        String   @id @default(cuid())
-  title     String
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  columns   Column[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("boards")
-}
-
-model Column {
-  id        String   @id @default(cuid())
-  title     String
-  order     Int
-  boardId   String
-  board     Board    @relation(fields: [boardId], references: [id], onDelete: Cascade)
-  tasks     Task[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@map("columns")
-}
-
-model Task {
-  id           String   @id @default(cuid())
-  title        String
-  description  String?
-  priority     Priority // "HIGH", "MEDIUM", "LOW"
-  startAt      DateTime?
-  endAt        DateTime?
-  pomodoroGoal Int      @default(1)
-  completed    Boolean  @default(false)
-  columnId     String
-  column       Column   @relation(fields: [columnId], references: [id], onDelete: Cascade)
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  pomodoros    Pomodoro[]
-  gardenFlowers GardenFlower[]
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-
-  @@map("tasks")
-}
-
-model Pomodoro {
-  id          String         @id @default(cuid())
-  duration    Int            @default(25) // em minutos
-  breakTime   Int            @default(5)  // em minutos
-  status      PomodoroStatus @default(PENDING) // "PENDING", "RUNNING", "PAUSED", "COMPLETED"
-  startedAt   DateTime?
-  pausedAt    DateTime?
-  completedAt DateTime?
-  taskId      String
-  task        Task           @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  userId      String
-  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt   DateTime       @default(now())
-  updatedAt   DateTime       @updatedAt
-
-  @@map("pomodoros")
-}
-
-model GardenFlower {
-  id            String     @id @default(cuid())
-  userId        String
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  taskId        String
-  task          Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  type          FlowerType @default(NORMAL)
-  priority      Priority
-  color         String?
-  legendaryName String?
-  customName    String?
-  tags          String[]   @default([])
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-
-  @@map("garden_flowers")
+enum MemoryType {
+  PERSONAL_INFO
+  PERSONAL_CONTEXT
+  WORK_CONTEXT
+  STUDY_CONTEXT
+  PRODUCTIVITY_PATTERN
+  EMOTIONAL_STATE
+  COMMUNICATION_STYLE
+  GOALS_PROJECTS
+  PREFERENCES
+  IMPORTANT_DATES
+  FEEDBACK
 }
