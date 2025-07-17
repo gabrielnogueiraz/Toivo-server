@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createIdSchema } from '../../utils/validation.js';
 
 // Schema para criação de board
 export const createBoardSchema = z.object({
@@ -12,7 +13,7 @@ export const updateBoardSchema = z.object({
 
 // Schema para parâmetros de rota
 export const boardParamsSchema = z.object({
-  id: z.string().cuid('ID inválido')
+  id: createIdSchema('ID do board')
 });
 
 // Tipos inferidos

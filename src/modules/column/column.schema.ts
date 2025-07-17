@@ -1,9 +1,10 @@
 import { z } from 'zod';
+import { createIdSchema } from '../../utils/validation.js';
 
 // Schema para criação de coluna
 export const createColumnSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório').max(100, 'Título deve ter no máximo 100 caracteres'),
-  boardId: z.string().cuid('ID do board inválido'),
+  boardId: createIdSchema('ID do board'),
   order: z.number().int().min(0, 'Ordem deve ser um número positivo').optional()
 });
 
@@ -15,7 +16,7 @@ export const updateColumnSchema = z.object({
 
 // Schema para parâmetros de rota
 export const columnParamsSchema = z.object({
-  id: z.string().cuid('ID inválido')
+  id: createIdSchema('ID da coluna')
 });
 
 // Tipos inferidos

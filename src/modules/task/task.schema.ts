@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createIdSchema } from '../../utils/validation.js';
 
 // Schema para criação de tarefa
 export const createTaskSchema = z.object({
@@ -10,7 +11,7 @@ export const createTaskSchema = z.object({
   startAt: z.string().datetime('Data de início inválida').transform(str => new Date(str)).optional(),
   endAt: z.string().datetime('Data de fim inválida').transform(str => new Date(str)).optional(),
   pomodoroGoal: z.number().int().min(1, 'Meta de pomodoros deve ser no mínimo 1').max(20, 'Meta de pomodoros deve ser no máximo 20').default(1),
-  columnId: z.string().cuid('ID da coluna inválido')
+  columnId: createIdSchema('ID da coluna')
 });
 
 // Schema para atualização de tarefa
@@ -23,18 +24,18 @@ export const updateTaskSchema = z.object({
   startAt: z.string().datetime('Data de início inválida').transform(str => new Date(str)).optional(),
   endAt: z.string().datetime('Data de fim inválida').transform(str => new Date(str)).optional(),
   pomodoroGoal: z.number().int().min(1, 'Meta de pomodoros deve ser no mínimo 1').max(20, 'Meta de pomodoros deve ser no máximo 20').optional(),
-  columnId: z.string().cuid('ID da coluna inválido').optional(),
+  columnId: createIdSchema('ID da coluna').optional(),
   completed: z.boolean().optional()
 });
 
 // Schema para mover tarefa
 export const moveTaskSchema = z.object({
-  columnId: z.string().cuid('ID da coluna inválido')
+  columnId: createIdSchema('ID da coluna')
 });
 
 // Schema para parâmetros de rota
 export const taskParamsSchema = z.object({
-  id: z.string().cuid('ID inválido')
+  id: createIdSchema('ID da tarefa')
 });
 
 // Validação customizada para datas (apenas se ambas forem fornecidas)
