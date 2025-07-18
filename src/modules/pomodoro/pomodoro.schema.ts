@@ -10,9 +10,9 @@ export const startPomodoroSchema = z.object({
 
 // Schema para configurações do pomodoro
 export const pomodoroSettingsSchema = z.object({
-  focusDuration: z.number().int().min(5, 'Duração do foco deve ser no mínimo 5 minutos').max(60, 'Duração do foco deve ser no máximo 60 minutos').default(25),
+  focusDuration: z.number().int().min(1, 'Duração do foco deve ser no mínimo 1 minuto').max(60, 'Duração do foco deve ser no máximo 60 minutos').default(25),
   shortBreakTime: z.number().int().min(1, 'Pausa curta deve ser no mínimo 1 minuto').max(30, 'Pausa curta deve ser no máximo 30 minutos').default(5),
-  longBreakTime: z.number().int().min(5, 'Pausa longa deve ser no mínimo 5 minutos').max(60, 'Pausa longa deve ser no máximo 60 minutos').default(15)
+  longBreakTime: z.number().int().min(1, 'Pausa longa deve ser no mínimo 1 minuto').max(60, 'Pausa longa deve ser no máximo 60 minutos').default(15)
 });
 
 // Schema para atualização de configurações do pomodoro
