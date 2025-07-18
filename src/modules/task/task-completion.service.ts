@@ -27,11 +27,17 @@ export class TaskCompletionService {
     if (completedPomodoros >= requiredPomodoros && !task.completed) {
       await this.markTaskAsCompleted(taskId, userId);
       
-      await this.gardenService.createFlowerFromTask(
-        userId, 
-        taskId, 
-        task.priority as $Enums.Priority
-      );
+      try {
+        await this.gardenService.createFlowerFromTask(
+          userId, 
+          taskId, 
+          task.priority as $Enums.Priority
+        );
+        console.log(`✅ Flores criadas automaticamente para tarefa ${taskId} do usuário ${userId}`);
+      } catch (error) {
+        console.error('❌ Erro ao criar flores automaticamente:', error);
+        // Não falha a conclusão da tarefa se a criação de flores falhar
+      }
 
       return {
         taskCompleted: true,
@@ -81,12 +87,18 @@ export class TaskCompletionService {
 
     let flowersCreated = false;
     if (completedPomodoros >= requiredPomodoros) {
-      await this.gardenService.createFlowerFromTask(
-        userId, 
-        taskId, 
-        task.priority as $Enums.Priority
-      );
-      flowersCreated = true;
+      try {
+        await this.gardenService.createFlowerFromTask(
+          userId, 
+          taskId, 
+          task.priority as $Enums.Priority
+        );
+        flowersCreated = true;
+        console.log(`✅ Flores criadas manualmente para tarefa ${taskId} do usuário ${userId}`);
+      } catch (error) {
+        console.error('❌ Erro ao criar flores na conclusão manual:', error);
+        // Continua mesmo se a criação de flores falhar
+      }
     }
 
     return {
