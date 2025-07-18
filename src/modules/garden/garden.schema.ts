@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { createIdSchema } from '../../utils/validation.js';
 
 export const FlowerTypeSchema = z.enum(['NORMAL', 'LEGENDARY']);
 export const PrioritySchema = z.enum(['LOW', 'MEDIUM', 'HIGH']);
 
 export const CreateFlowerSchema = z.object({
-  taskId: z.string().cuid(),
+  taskId: createIdSchema('ID da tarefa'),
   type: FlowerTypeSchema,
   priority: PrioritySchema,
   color: z.string().optional(),

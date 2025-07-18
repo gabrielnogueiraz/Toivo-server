@@ -1,9 +1,33 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { GardenService } from './garden.service.js';
-import { FlowerFiltersSchema, UpdateFlowerSchema } from './garden.schema.js';
+import { FlowerFiltersSchema, UpdateFlowerSchema, CreateFlowerSchema } from './garden.schema.js';
 
 export class GardenController {
   constructor(private gardenService: GardenService) {}
+
+  async createFlower(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const userId = request.user!.id;
+      const data = CreateFlowerSchema.parse(request.body);
+      
+      const flowers = await this.gardenService.createFlowerFromTask(
+        userId, 
+        data.taskId, 
+        data.priority
+      );
+      
+      return reply.status(201).send({
+        success: true,
+        data: flowers,
+        message: 'Flowers created successfully',
+      });
+    } catch (error) {
+      return reply.status(400).send({
+        success: false,
+        error: error instanceof Error ? error.message : 'Failed to create flower',
+      });
+    }
+  }
 
   async getGarden(request: FastifyRequest, reply: FastifyReply) {
     try {

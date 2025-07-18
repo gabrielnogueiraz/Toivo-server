@@ -2,7 +2,7 @@ import { AppType } from '../../app.js';
 import { GardenController } from './garden.controller.js';
 import { GardenService } from './garden.service.js';
 import { GardenRepository } from './garden.repository.js';
-import { FlowerFiltersSchema, UpdateFlowerSchema } from './garden.schema.js';
+import { FlowerFiltersSchema, UpdateFlowerSchema, CreateFlowerSchema } from './garden.schema.js';
 import { prisma } from '../../config/db.config.js';
 
 const gardenRepository = new GardenRepository(prisma);
@@ -10,6 +10,15 @@ const gardenService = new GardenService(gardenRepository);
 const gardenController = new GardenController(gardenService);
 
 export default async function gardenRoutes(app: AppType) {
+  // POST /garden - Criar flores manualmente (para debug)
+  app.post('/garden', {
+    preHandler: [app.authenticate],
+    schema: {
+      body: CreateFlowerSchema,
+    },
+    handler: gardenController.createFlower.bind(gardenController),
+  });
+
   app.get('/garden', {
     preHandler: [app.authenticate],
     schema: {
