@@ -28,6 +28,7 @@ import columnRoutes from "./modules/column/column.routes.js";
 import taskRoutes from "./modules/task/task.routes.js";
 import pomodoroRoutes from "./modules/pomodoro/pomodoro.routes.js";
 import gardenRoutes from "./modules/garden/garden.routes.js";
+import statsRoutes from "./modules/stats/stats.routes.js";
 
 // Importação para integração com Lumi
 import { lumiAuthRoutes } from "./routes/lumiAuth.js";
@@ -37,18 +38,21 @@ import { BoardController } from "./modules/board/board.controller.js";
 import { ColumnController } from "./modules/column/column.controller.js";
 import { TaskController } from "./modules/task/task.controller.js";
 import { PomodoroController } from "./modules/pomodoro/pomodoro.controller.js";
+import { StatsController } from "./modules/stats/stats.controller.js";
 
 // Importações dos services
 import { BoardService } from "./modules/board/board.service.js";
 import { ColumnService } from "./modules/column/column.service.js";
 import { TaskService } from "./modules/task/task.service.js";
 import { PomodoroService } from "./modules/pomodoro/pomodoro.service.js";
+import { StatsService } from "./modules/stats/stats.service.js";
 
 // Importações dos repositories
 import { BoardRepository } from "./modules/board/board.repository.js";
 import { ColumnRepository } from "./modules/column/column.repository.js";
 import { TaskRepository } from "./modules/task/task.repository.js";
 import { PomodoroRepository } from "./modules/pomodoro/pomodoro.repository.js";
+import { StatsRepository } from "./modules/stats/stats.repository.js";
 
 export async function buildApp() {
   const app = fastify(appConfig).withTypeProvider<ZodTypeProvider>();
@@ -99,18 +103,21 @@ export async function buildApp() {
   const columnRepository = new ColumnRepository(prisma);
   const taskRepository = new TaskRepository(prisma);
   const pomodoroRepository = new PomodoroRepository(prisma);
+  const statsRepository = new StatsRepository(prisma);
 
   // Instanciar services
   const boardService = new BoardService(boardRepository, columnRepository);
   const columnService = new ColumnService(columnRepository);
   const taskService = new TaskService(taskRepository);
   const pomodoroService = new PomodoroService(pomodoroRepository);
+  const statsService = new StatsService(statsRepository);
 
   // Instanciar controllers
   const boardController = new BoardController(boardService);
   const columnController = new ColumnController(columnService);
   const taskController = new TaskController(taskService);
   const pomodoroController = new PomodoroController(pomodoroService);
+  const statsController = new StatsController(statsService);
 
   app.decorate("authenticate", async function (request: FastifyRequest, reply: FastifyReply) {
       try {
@@ -203,6 +210,7 @@ export async function buildApp() {
       api.register((subApi) => columnRoutes(subApi, columnController), { prefix: '/columns' });
       api.register((subApi) => taskRoutes(subApi, taskController), { prefix: '/tasks' });
       api.register((subApi) => pomodoroRoutes(subApi, pomodoroController), { prefix: '/pomodoro' });
+      api.register((subApi) => statsRoutes(subApi, statsController), { prefix: '/stats' });
       
       // Rotas de integração com Lumi
       api.register(lumiAuthRoutes);
