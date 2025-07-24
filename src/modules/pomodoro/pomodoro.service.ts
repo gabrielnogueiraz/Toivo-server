@@ -1,8 +1,6 @@
 import { PomodoroRepository } from './pomodoro.repository.js';
 import { StartPomodoroInput, AvailableTasksQuery, UpdatePomodoroSettingsInput } from './pomodoro.schema.js';
 import { TaskCompletionService } from '../task/task-completion.service.js';
-import { GardenService } from '../garden/garden.service.js';
-import { GardenRepository } from '../garden/garden.repository.js';
 import { prisma } from '../../config/db.config.js';
 
 // Cache interface para evitar polling excessivo
@@ -25,9 +23,7 @@ export class PomodoroService {
     }, 30000);
 
     // Inicializar TaskCompletionService
-    const gardenRepository = new GardenRepository(prisma);
-    const gardenService = new GardenService(gardenRepository);
-    this.taskCompletionService = new TaskCompletionService(prisma, gardenService);
+    this.taskCompletionService = new TaskCompletionService(prisma);
   }
 
   // Configurações do Pomodoro
@@ -163,7 +159,6 @@ export class PomodoroService {
             pomodoro,
             taskCompletion: {
               taskCompleted: false,
-              flowersCreated: false,
               error: completionError instanceof Error ? completionError.message : 'Unknown error'
             }
           }
