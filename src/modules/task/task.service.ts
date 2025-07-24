@@ -1,17 +1,13 @@
 import { TaskRepository } from './task.repository.js';
 import { CreateTaskInput, UpdateTaskInput } from './task.schema.js';
 import { TaskCompletionService } from './task-completion.service.js';
-import { GardenService } from '../garden/garden.service.js';
-import { GardenRepository } from '../garden/garden.repository.js';
 import { prisma } from '../../config/db.config.js';
 
 export class TaskService {
   private taskCompletionService: TaskCompletionService;
 
   constructor(private taskRepository: TaskRepository) {
-    const gardenRepository = new GardenRepository(prisma);
-    const gardenService = new GardenService(gardenRepository);
-    this.taskCompletionService = new TaskCompletionService(prisma, gardenService);
+    this.taskCompletionService = new TaskCompletionService(prisma);
   }
 
   async createTask(data: CreateTaskInput, userId: string) {

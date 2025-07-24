@@ -1,10 +1,8 @@
 import { PrismaClient, $Enums } from '@prisma/client';
-import { GardenService } from '../garden/garden.service.js';
 
 export class TaskCompletionService {
   constructor(
-    private prisma: PrismaClient,
-    private gardenService: GardenService
+    private prisma: PrismaClient
   ) {}
 
   async checkTaskCompletionAfterPomodoro(taskId: string, userId: string) {
@@ -27,21 +25,10 @@ export class TaskCompletionService {
     if (completedPomodoros >= requiredPomodoros && !task.completed) {
       await this.markTaskAsCompleted(taskId, userId);
       
-      try {
-        await this.gardenService.createFlowerFromTask(
-          userId, 
-          taskId, 
-          task.priority as $Enums.Priority
-        );
-        console.log(`✅ Flores criadas automaticamente para tarefa ${taskId} do usuário ${userId}`);
-      } catch (error) {
-        console.error('❌ Erro ao criar flores automaticamente:', error);
-        // Não falha a conclusão da tarefa se a criação de flores falhar
-      }
+      console.log(`✅ Tarefa ${taskId} marcada como concluída automaticamente para usuário ${userId}`);
 
       return {
         taskCompleted: true,
-        flowersCreated: true,
         completedPomodoros,
         requiredPomodoros
       };
@@ -49,7 +36,6 @@ export class TaskCompletionService {
 
     return {
       taskCompleted: false,
-      flowersCreated: false,
       completedPomodoros,
       requiredPomodoros
     };
@@ -85,30 +71,13 @@ export class TaskCompletionService {
 
     await this.markTaskAsCompleted(taskId, userId);
 
-    let flowersCreated = false;
-    if (completedPomodoros >= requiredPomodoros) {
-      try {
-        await this.gardenService.createFlowerFromTask(
-          userId, 
-          taskId, 
-          task.priority as $Enums.Priority
-        );
-        flowersCreated = true;
-        console.log(`✅ Flores criadas manualmente para tarefa ${taskId} do usuário ${userId}`);
-      } catch (error) {
-        console.error('❌ Erro ao criar flores na conclusão manual:', error);
-        // Continua mesmo se a criação de flores falhar
-      }
-    }
+    console.log(`✅ Tarefa ${taskId} marcada como concluída manualmente para usuário ${userId}`);
 
     return {
       taskCompleted: true,
-      flowersCreated,
       completedPomodoros,
       requiredPomodoros,
-      message: flowersCreated 
-        ? 'Tarefa concluída! Você ganhou flores!' 
-        : 'Tarefa marcada como concluída, mas você precisa completar todos os pomodoros para ganhar flores.'
+      message: 'Tarefa concluída com sucesso!'
     };
   }
 }
