@@ -31,7 +31,7 @@ model User {
   LumiMemory       LumiMemory[]
   notifications    Notification[]
   boards           Board[]
-  gardenFlowers    GardenFlower[]
+
   pomodoroSettings PomodoroSettings?
   pomodoros        Pomodoro[]
   tasks            Task[]
@@ -98,7 +98,7 @@ model Task {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   completed     Boolean        @default(false)
-  gardenFlowers GardenFlower[]
+
   pomodoros     Pomodoro[]
   column        Column         @relation(fields: [columnId], references: [id], onDelete: Cascade)
   user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -124,23 +124,7 @@ model Pomodoro {
   @@map("pomodoros")
 }
 
-model GardenFlower {
-  id            String     @id @default(cuid())
-  userId        String
-  taskId        String
-  type          FlowerType @default(NORMAL)
-  priority      Priority
-  color         String?
-  legendaryName String?
-  customName    String?
-  tags          String[]   @default([])
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  task          Task       @relation(fields: [taskId], references: [id], onDelete: Cascade)
-  user          User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("garden_flowers")
-}
 
 model LumiMemory {
   id                  String          @id
@@ -176,10 +160,7 @@ enum PomodoroStatus {
   CANCELLED
 }
 
-enum FlowerType {
-  NORMAL
-  LEGENDARY
-}
+
 
 enum ImportanceLevel {
   LOW
